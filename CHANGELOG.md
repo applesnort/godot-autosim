@@ -4,7 +4,7 @@ All notable changes to godot-autosim will be documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2026-04-06
 
 ### Added
 - Tests for `assert_no_dominant_strategy`, `assert_median_between`, `assert_stddev_below`
