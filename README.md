@@ -132,7 +132,7 @@ report.save("balance_report.json")  # every run with all metrics
 
 ## Balance Tests in CI
 
-The real power is catching regressions automatically. If you use [GUT](https://github.com/bitwes/Gut) for testing, the framework includes assertion helpers that turn balance data into pass/fail tests:
+The real power is catching regressions automatically. If you use [GUT](https://github.com/bitwes/Gut) (Godot Unit Test — the most popular testing framework for Godot, similar to Jest or pytest), the framework includes assertion helpers that turn balance data into pass/fail tests. If you don't use GUT, skip this section — everything above works without it.
 
 ```gdscript
 extends GutTest
