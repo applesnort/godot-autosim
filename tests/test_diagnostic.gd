@@ -1,7 +1,7 @@
 extends GutTest
 
-var CardBattleAdapter = preload("res://examples/card_battle/card_battle_adapter.gd")
-var AggressiveBot = preload("res://examples/card_battle/aggressive_bot.gd")
+var CardBattleAdapter = preload("res://addons/godot_autosim/examples/card_battle/card_battle_adapter.gd")
+var AggressiveBot = preload("res://addons/godot_autosim/examples/card_battle/aggressive_bot.gd")
 
 
 func test_adapter_create_state() -> void:

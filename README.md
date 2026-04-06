@@ -231,7 +231,7 @@ We've tested godot-autosim against six games across different genres to verify t
 
 ### Built-in: Card Battle
 
-Ships in `examples/card_battle/`. A minimal deckbuilder with attack/block/bash cards vs a repeating damage pattern. Three bot strategies included.
+Ships in `addons/godot_autosim/examples/card_battle/`. A minimal deckbuilder with attack/block/bash cards vs a repeating damage pattern. Three bot strategies included.
 
 | Strategy | Win Rate | Avg Turns | Notes |
 |---|---|---|---|
@@ -241,8 +241,8 @@ Ships in `examples/card_battle/`. A minimal deckbuilder with attack/block/bash c
 
 ```bash
 godot --headless --script addons/godot_autosim/cli/cli.gd -- \
-  --adapter=res://examples/card_battle/card_battle_adapter.gd \
-  --strategy=res://examples/card_battle/aggressive_bot.gd \
+  --adapter=res://addons/godot_autosim/examples/card_battle/card_battle_adapter.gd \
+  --strategy=res://addons/godot_autosim/examples/card_battle/aggressive_bot.gd \
   --iterations=500
 ```
 
