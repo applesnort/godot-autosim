@@ -112,7 +112,31 @@ godot --headless --script addons/godot_autosim/cli/cli.gd -- \
   --output=balance_report.json
 ```
 
-### 5. Balance Tests (with GUT)
+### 5. Async Games (coroutine-based)
+
+If your game uses `await` in its play/turn logic, use the async variants:
+
+```gdscript
+# my_async_adapter.gd
+extends AutoSimAsyncGameAdapter
+
+func apply_action_async(state: Variant, action: Variant) -> Variant:
+    # Your game's play_card() uses await internally
+    await state.play_card(action["card"])
+    return state
+
+# All other methods (create_initial_state, is_game_over, etc.) are the same
+```
+
+```gdscript
+# Running async simulations (must be in the scene tree)
+var runner = AutoSimAsyncRunner.new()
+add_child(runner)
+var report = await runner.run(config)
+runner.queue_free()
+```
+
+### 6. Balance Tests (with GUT)
 
 ```gdscript
 # test_balance.gd
@@ -168,7 +192,15 @@ func test_skill_expression():
 
 | Method | Purpose |
 |---|---|
-| `AutoSimRunner.run(config) -> AutoSimBalanceReport` | Run all simulations |
+| `AutoSimRunner.run(config) -> AutoSimBalanceReport` | Run all simulations (sync) |
+
+### AutoSimAsyncRunner (for coroutine-based games)
+
+| Method | Purpose |
+|---|---|
+| `await runner.run(config) -> AutoSimBalanceReport` | Run all simulations (async, must be in scene tree) |
+
+Extends `Node` — add as a child, await the result, then free it.
 
 ### AutoSimBalanceReport (framework provides)
 
@@ -270,6 +302,37 @@ Finding: Basic Attack at 25 damage is wildly overtuned (75 DPS/turn vs 20-40 HP 
 Even random play wins 99.7%.
 ```
 
+### 3D Turn-Based Combat ([Cute-Fame-Studio/3D-TurnBasedCombat](https://github.com/Cute-Fame-Studio/3D-TurnBasedCombat))
+3D RPG combat with `CharacterBody3D` battlers, elemental damage, skills, and
+multi-unit parties. Mathematical model adapter (game uses 3D scene tree,
+`AnimationTree`, tweened movement, `.glb` models).
+
+```
+Balance findings (500 iterations each, seed=42):
+  Warriors vs Mages (1v1):        100% warrior win — mages too squishy (80 HP / 4 def)
+  Balanced (W+M+H) vs 3× Warriors: 98.5% balanced win — healers enable infinite sustain
+  Fire Mages vs Water Mages:      100% fire win — element wheel is inverted from intuition
+  Party vs Dragon Boss:           100% party win — healer sustain trivializes boss fights
+
+Finding: Healers are overpowered (50 HP heal, 15 SP cost, 7 SP/turn regen = near-infinite).
+Element wheel function contradicts its own comments (Fire beats Water, not vice versa).
+```
+
+### Roguelike Dungeon Crawler ([statico/godot-roguelike-example](https://github.com/statico/godot-roguelike-example))
+Turn-based roguelike with d20 combat, BSP dungeon generation, monster scaling,
+and nutrition system. Mathematical model adapter (game's World singleton is
+tightly coupled to the scene tree).
+
+```
+Strategy comparison (500 iterations each, seed=42):
+  Smart Bot:  avg 1.5 floors | 2.3 kills | 267 turns survived
+  Random Bot: avg 0.0 floors | 0.5 kills | 686 turns survived
+
+Finding: Speed/positioning dominates raw combat — smart bot clears floors but
+dies faster (aggressive engagement). Neither bot completes 20 floors; the d20
+combat system is genuinely lethal at depth. Monster strength scales 1.25× per floor.
+```
+
 ## Two Adapter Approaches
 
 ### Direct Adapter (clean architecture)
@@ -315,14 +378,13 @@ per second instead of fighting engine dependencies.
 | Your game's architecture | Adapter approach |
 |---|---|
 | Logic separated from nodes (data-driven) | Direct — call real game code |
-| Game uses `await` / coroutines | Direct with `AutoSimAsyncGameAdapter` |
+| Game uses `await` / coroutines | Direct with `AutoSimAsyncGameAdapter` + `AutoSimAsyncRunner` |
 | Game uses physics/navigation/timers | Mathematical model |
 | C# simulation layer | C# bridge class + GDScript adapter |
 
 ## Requirements
 
 - Godot 4.6+
-- [GUT](https://github.com/bitwes/Gut) for running balance test assertions (optional)
 
 ## License
 
