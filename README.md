@@ -270,10 +270,58 @@ Finding: Basic Attack at 25 damage is wildly overtuned (75 DPS/turn vs 20-40 HP 
 Even random play wins 99.7%.
 ```
 
+## Two Adapter Approaches
+
+### Direct Adapter (clean architecture)
+If your game logic is separated from rendering — pure functions operating on data,
+no physics dependencies, no Timer nodes — your adapter calls the real game code directly.
+This gives exact fidelity.
+
+```gdscript
+# Your game already has: CombatState.play_card(card) -> result
+func apply_action(state, action):
+    state.play_card(action["card"])
+    return state
+```
+
+### Mathematical Model Adapter (physics-coupled games)
+If your game uses Area2D collision, NavigationAgent2D, AnimationPlayer state machines,
+or Timer-based cooldowns, those systems crash without a scene tree. Instead of
+fighting the engine, extract the balance-relevant numbers and reimplement the core
+loop as pure math.
+
+```gdscript
+# Real game uses Area2D overlap for targeting — won't run headless.
+# Adapter models the same mechanic as distance math:
+func _find_target(turret, enemies):
+    for enemy in enemies:
+        if turret["pos"].distance_to(enemy["pos"]) <= turret["range"]:
+            return enemy
+    return null
+```
+
+**Why this works:** Balance problems are about numbers — damage too high, cost too
+low, scaling too steep. The tower defense adapter found a 144× cost-efficiency
+imbalance between turret types without ever loading a tilemap. The auto-battler
+adapter found that equipped items swing outcomes from 0% to 100% win rate without
+instantiating a single Area2D.
+
+**What it trades:** Physics edge cases (projectile dodging, pathfinding quirks,
+collision overlaps). For balance testing, that's a good trade — you get 200 runs
+per second instead of fighting engine dependencies.
+
+**When to use which:**
+
+| Your game's architecture | Adapter approach |
+|---|---|
+| Logic separated from nodes (data-driven) | Direct — call real game code |
+| Game uses `await` / coroutines | Direct with `AutoSimAsyncGameAdapter` |
+| Game uses physics/navigation/timers | Mathematical model |
+| C# simulation layer | C# bridge class + GDScript adapter |
+
 ## Requirements
 
 - Godot 4.6+
-- Your game logic must be separable from rendering (no `_process` frame dependencies)
 - [GUT](https://github.com/bitwes/Gut) for running balance test assertions (optional)
 
 ## License
