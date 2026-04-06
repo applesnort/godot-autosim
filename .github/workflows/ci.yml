@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.0
+          use-dotnet: false
+
+      - name: Install GUT
+        run: |
+          mkdir -p addons/gut
+          git clone --depth 1 --branch godot_4_4_1 https://github.com/bitwes/Gut.git /tmp/gut
+          cp -r /tmp/gut/addons/gut/* addons/gut/
+
+      - name: Import project
+        run: godot --headless --import --quit-after 5
+        timeout-minutes: 2
+
+      - name: Run tests
+        run: godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
+        timeout-minutes: 5
