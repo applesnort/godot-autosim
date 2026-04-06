@@ -242,9 +242,17 @@ Death cliff at waves 6-8. Easy→Normal gap too steep.
 ```
 
 ### NHL95 (Hockey Simulation)
-Real-time hockey with deterministic C# simulation layer. `Sim.Advance(state, input)` called per frame. C# adapter bridges to framework.
+Real-time hockey with deterministic C# simulation layer. `Sim.Advance(state, input)` called 60×/sec. C# bridge adapter wraps the sim for the GDScript framework.
 
-*(Results pending — adapter being built)*
+```
+25-game batch (COM vs COM, seed 42-66):
+  Speed Demons (Team A):  88.0% win rate | avg 10.1 goals
+  Power Forwards (Team B): 12.0% win rate | avg 6.6 goals
+  Avg goals/game: 16.7 | Overtime: 4%
+
+Finding: speed/agility stats dominate power/shot stats (88% vs 12%).
+Goalies too porous (16.7 goals/game vs ~6 in real hockey).
+```
 
 ## Requirements
 
