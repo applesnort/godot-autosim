@@ -68,6 +68,8 @@ static func _run_single(config: AutoSimConfig, run_seed: int) -> AutoSimRunResul
 	result.metrics = adapter.get_run_metrics(state)
 	result.metrics["turns"] = turn
 
+	config.game_adapter.cleanup_state(state)
+
 	return result
 
 

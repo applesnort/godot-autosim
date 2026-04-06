@@ -58,3 +58,10 @@ func get_winner(state: Variant) -> String:
 ## Called once when the game ends.
 func get_run_metrics(state: Variant) -> Dictionary:
 	return {}
+
+
+## Called after each run completes. Override to free Nodes or other resources
+## that were created in create_initial_state().
+func cleanup_state(state: Variant) -> void:
+	if state is Node:
+		(state as Node).queue_free()
