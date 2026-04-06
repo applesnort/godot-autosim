@@ -206,6 +206,46 @@ godot --headless --script addons/godot_autosim/cli/cli.gd -- \
   --iterations=500
 ```
 
+## Validated on Real Games
+
+godot-autosim has been tested against real, shipping games — not just toy examples.
+
+### Kitchen Cardgame (Card Roguelike)
+STS-style deckbuilder with async combat (`await` in `play_card`). Uses `AutoSimAsyncGameAdapter`.
+
+```
+SMART vs Breakfast Rush: 100% win | avg 2.5 turns | HP remaining: 73.9/80
+SMART vs Boss:           100% win | avg 7.1 turns | HP remaining: 57.4/80
+RANDOM vs Boss:          100% win | avg 7.6 turns | HP remaining: 56.9/80
+
+Finding: game is unlosable — 100% win rate with ANY strategy including random.
+Skill spread: 0% (no difference between smart and random play).
+```
+
+### Dark Energy / Edgefall (Wave Survival)
+Vampire Survivors-style with 20 waves, weapons, upgrades. Uses sync `AutoSimGameAdapter` wrapping existing `FastSimulator`.
+
+```
+Strategy comparison (Normal difficulty, 60 runs):
+  Balanced:   18.3% win | avg wave 10.0
+  Aggressive:  0.0% win | avg wave 6.8
+  Defensive:  40.0% win | avg wave 13.5
+
+Difficulty scaling:
+  Easy:    93.3% win
+  Normal:  18.3% win
+  Hard:     1.7% win
+  Intense:  0.0% win
+
+Finding: defensive strategy dominates, aggressive is non-viable.
+Death cliff at waves 6-8. Easy→Normal gap too steep.
+```
+
+### NHL95 (Hockey Simulation)
+Real-time hockey with deterministic C# simulation layer. `Sim.Advance(state, input)` called per frame. C# adapter bridges to framework.
+
+*(Results pending — adapter being built)*
+
 ## Requirements
 
 - Godot 4.6+
