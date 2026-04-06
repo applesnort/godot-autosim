@@ -206,52 +206,68 @@ godot --headless --script addons/godot_autosim/cli/cli.gd -- \
   --iterations=500
 ```
 
-## Validated on Real Games
+## Tested on Open-Source Games
 
-godot-autosim has been tested against real, shipping games — not just toy examples.
+godot-autosim ships with a built-in card battle example and has been validated against
+open-source Godot games of different types. Clone any of these and try the adapter yourself.
 
-### Kitchen Cardgame (Card Roguelike)
-STS-style deckbuilder with async combat (`await` in `play_card`). Uses `AutoSimAsyncGameAdapter`.
+### Built-in: Card Battle (2D, Turn-Based)
+Ships in `examples/card_battle/`. A minimal deckbuilder with attack/block/bash cards
+vs an enemy with a repeating damage pattern. Three bot strategies included.
 
-```
-SMART vs Breakfast Rush: 100% win | avg 2.5 turns | HP remaining: 73.9/80
-SMART vs Boss:           100% win | avg 7.1 turns | HP remaining: 57.4/80
-RANDOM vs Boss:          100% win | avg 7.6 turns | HP remaining: 56.9/80
-
-Finding: game is unlosable — 100% win rate with ANY strategy including random.
-Skill spread: 0% (no difference between smart and random play).
-```
-
-### Dark Energy / Edgefall (Wave Survival)
-Vampire Survivors-style with 20 waves, weapons, upgrades. Uses sync `AutoSimGameAdapter` wrapping existing `FastSimulator`.
-
-```
-Strategy comparison (Normal difficulty, 60 runs):
-  Balanced:   18.3% win | avg wave 10.0
-  Aggressive:  0.0% win | avg wave 6.8
-  Defensive:  40.0% win | avg wave 13.5
-
-Difficulty scaling:
-  Easy:    93.3% win
-  Normal:  18.3% win
-  Hard:     1.7% win
-  Intense:  0.0% win
-
-Finding: defensive strategy dominates, aggressive is non-viable.
-Death cliff at waves 6-8. Easy→Normal gap too steep.
+```bash
+godot --headless --script addons/godot_autosim/cli/cli.gd -- \
+  --adapter=res://examples/card_battle/card_battle_adapter.gd \
+  --strategy=res://examples/card_battle/aggressive_bot.gd \
+  --iterations=500
 ```
 
-### NHL95 (Hockey Simulation)
-Real-time hockey with deterministic C# simulation layer. `Sim.Advance(state, input)` called 60×/sec. C# bridge adapter wraps the sim for the GDScript framework.
+```
+Strategy comparison (50 HP enemy, 100 runs each):
+  Aggressive: 100% win | avg 10.7 turns
+  Defensive:  100% win | avg 33.4 turns (3× slower!)
+  Random:     100% win | avg 19.9 turns
+```
+
+### Outpost Assault — Tower Defense ([quiver-dev/tower-defense-godot4](https://github.com/quiver-dev/tower-defense-godot4))
+Tile-based tower defense with economy, waves, and multiple turret types. Uses
+mathematical model adapter (game is physics-coupled).
 
 ```
-25-game batch (COM vs COM, seed 42-66):
-  Speed Demons (Team A):  88.0% win rate | avg 10.1 goals
-  Power Forwards (Team B): 12.0% win rate | avg 6.6 goals
-  Avg goals/game: 16.7 | Overtime: 4%
+Strategy comparison (200 runs each, seed=42):
+  Aggressive (gatling-first): 100% win | 190 kills | objective untouched
+  Balanced (mixed):           100% win | 190 kills | objective untouched
+  Defensive (missile-first):    0% win |  42 kills | objective destroyed
 
-Finding: speed/agility stats dominate power/shot stats (88% vs 12%).
-Goalies too porous (16.7 goals/game vs ~6 in real hockey).
+Finding: 144× DPS/cost imbalance — gatling (180 DPS, 250g) vs missile (4 DPS, 800g).
+Any strategy that doesn't prioritize gatlings loses.
+```
+
+### AutoBattler Course ([guladam/godot_autobattler_course](https://github.com/guladam/godot_autobattler_course))
+Singleplayer auto-battler with units, abilities, traits, and items. Mathematical
+model adapter with tick-based combat simulation.
+
+```
+Sample matchups (500 iterations each):
+  3 Bjorn + 2 Robin vs 5 Zombie:       100% player win
+  2 Robin vs 5 Zombie:                   0% player win
+  2 Bjorn (tier 2) vs 5 Bjorn (tier 1):  7.4% player win
+  1 Bjorn (sword+gloves) vs 3 Zombie:  100% player win
+
+Finding: items dramatically shift outcomes — one equipped unit beats three unequipped.
+```
+
+### Slay The Robot — Deckbuilder ([DesirePathGames/Slay-The-Robot](https://github.com/DesirePathGames/Slay-The-Robot))
+Full roguelike deckbuilder with 20+ cards, energy system, status effects.
+Mathematical model adapter (game uses scene-tree-coupled action system).
+
+```
+49/49 tests passing. Strategy comparison:
+  SmartBot:  100% win | avg 5.6 turns | HP remaining: 47.0
+  RandomBot: 99.7% win
+
+Finding: Basic Attack at 25 damage is wildly overtuned (75 DPS/turn vs 20-40 HP enemies).
+Even random play wins 99.7%.
 ```
 
 ## Requirements
