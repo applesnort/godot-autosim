@@ -3,7 +3,7 @@ extends GutTest
 var CardBattleAdapter = preload("res://addons/godot_autosim/examples/card_battle/card_battle_adapter.gd")
 var AggressiveBot = preload("res://addons/godot_autosim/examples/card_battle/aggressive_bot.gd")
 var DefensiveBot = preload("res://addons/godot_autosim/examples/card_battle/defensive_bot.gd")
-var RandomBot = preload("res://addons/godot_autosim/examples/card_battle/random_bot.gd")
+var RandomBot = preload("res://addons/godot_autosim/bots/random_bot.gd")
 
 
 # === Helpers ===
@@ -262,6 +262,7 @@ func test_parse_sweep_arg_single_value() -> void:
 	assert_eq(parsed["values"][0], 100.0)
 
 
+# Mirrors cli.gd._parse_sweep — can't call it directly (no class_name on SceneTree script)
 static func _parse_sweep(sweep_str: String) -> Dictionary:
 	var colon := sweep_str.find(":")
 	if colon < 0:

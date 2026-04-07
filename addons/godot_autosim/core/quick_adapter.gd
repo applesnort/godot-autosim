@@ -65,7 +65,7 @@ func create_initial_state() -> Variant:
 	if state is Dictionary:
 		for key in _swept_props:
 			if state.has(key):
-				state[key] = _swept_props[key]
+				state[key] = type_convert(_swept_props[key], typeof(state[key]))
 	return state
 
 

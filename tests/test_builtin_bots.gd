@@ -39,16 +39,16 @@ func test_random_bot_has_variance() -> void:
 # === AutoSimGreedyBot ===
 
 func test_greedy_bot_picks_highest_metric() -> void:
-	# Greedy bot targeting "damage" should prefer attack cards over end_turn
-	var adapter = CardBattleAdapter.new()
-	var state = adapter.create_initial_state()
-	var actions := adapter.get_available_actions(state)
-	var bot := AutoSimGreedyBot.new("value")
-	var chosen = bot.choose_action(state, actions)
+	# Test with synthetic actions that have the target key
+	var actions: Array = [
+		{action = "attack", damage = 5},
+		{action = "nuke", damage = 20},
+		{action = "heal", damage = 0},
+	]
+	var bot := AutoSimGreedyBot.new("damage")
+	var chosen = bot.choose_action(null, actions)
 	assert_not_null(chosen, "Greedy bot should choose something")
-	# Should pick a card with highest value, not end_turn
-	if chosen is Dictionary and chosen.has("action"):
-		assert_eq(chosen["action"], "play_card", "Should play a card, not end turn")
+	assert_eq(chosen["action"], "nuke", "Should pick the action with highest damage")
 
 
 func test_greedy_bot_completes_game() -> void:

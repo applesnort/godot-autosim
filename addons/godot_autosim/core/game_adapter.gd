@@ -4,6 +4,12 @@
 ## state, actions, and win conditions to the simulation framework.
 ## The framework treats your game state as opaque — only your adapter
 ## and your bot strategies need to understand it.
+##
+## IMPORTANT: Adapters must be stateless during simulation. All game state
+## lives in the state Variant passed to each method — do not store mutable
+## game state on the adapter instance (self). The same adapter instance is
+## reused across runs and sweep steps. Instance properties like enemy_hp
+## are configuration, not game state.
 class_name AutoSimGameAdapter
 extends RefCounted
 
