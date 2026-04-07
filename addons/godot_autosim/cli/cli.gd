@@ -40,9 +40,7 @@ func _init() -> void:
 		return
 
 	if strategy_path == "":
-		printerr("Error: --strategy is required. Pass --help for usage.")
-		quit(1)
-		return
+		strategy_path = "random"
 
 	var adapter_script = load(adapter_path)
 	if adapter_script == null:
@@ -50,14 +48,11 @@ func _init() -> void:
 		quit(1)
 		return
 
-	var strategy_script = load(strategy_path)
-	if strategy_script == null:
-		printerr("Error: could not load strategy at '%s'" % strategy_path)
+	var adapter: AutoSimGameAdapter = adapter_script.new()
+	var strategy: AutoSimBotStrategy = _make_strategy(strategy_path)
+	if strategy == null:
 		quit(1)
 		return
-
-	var adapter: AutoSimGameAdapter = adapter_script.new()
-	var strategy: AutoSimBotStrategy = strategy_script.new()
 
 	var roles := adapter.get_roles()
 	var strategies := {}
@@ -146,6 +141,22 @@ func _run_sweep(
 			printerr("Error saving report: %s" % error_string(err))
 
 
+static func _make_strategy(strategy_str: String) -> AutoSimBotStrategy:
+	if strategy_str == "random":
+		return AutoSimRandomBot.new()
+	if strategy_str.begins_with("greedy"):
+		var colon := strategy_str.find(":")
+		var key := strategy_str.substr(colon + 1) if colon >= 0 else "value"
+		return AutoSimGreedyBot.new(key)
+	# Treat as script path
+	var script = load(strategy_str)
+	if script == null:
+		printerr("Error: could not load strategy '%s'" % strategy_str)
+		printerr("  Built-in options: random, greedy, greedy:<metric_key>")
+		return null
+	return script.new()
+
+
 static func _parse_sweep(sweep_str: String) -> Dictionary:
 	var colon := sweep_str.find(":")
 	if colon < 0:
@@ -180,9 +191,9 @@ func _print_help() -> void:
 	print("")
 	print("Required:")
 	print("  --adapter=<path>     Path to your GameAdapter script (res://...)")
-	print("  --strategy=<path>    Path to your BotStrategy script (res://...)")
 	print("")
 	print("Optional:")
+	print("  --strategy=<name>    Bot strategy: random (default), greedy:<key>, or script path")
 	print("  --iterations=<n>     Number of simulations (default: 100, or 200 in sweep mode)")
 	print("  --seed=<n>           RNG seed for reproducibility (default: -1 = random)")
 	print("  --max-turns=<n>      Max turns per run (default: 1000)")
