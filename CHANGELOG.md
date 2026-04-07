@@ -10,7 +10,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Parameter sweep runner (`AutoSimSweepRunner`) — vary a single adapter property across a range of values, get a comparison table and threshold finding
 - `AutoSimSweepResult` with `table()`, `find_threshold()`, `get_report()`, JSON export
 - CLI `--sweep` flag for running sweeps from the command line
-- 23 new sweep tests (62 total)
+- Built-in bots: `AutoSimRandomBot` (random action) and `AutoSimGreedyBot` (maximize a metric)
+- `AutoSimQuickAdapter` — define games with lambdas instead of a class, supports property forwarding for sweeps
+- CLI defaults to random bot when `--strategy` is omitted
+- CLI supports `--strategy=random` and `--strategy=greedy:<key>` shortcuts
+- 40 new tests (79 total)
 
 ## [0.2.0] - 2026-04-06
 
