@@ -169,6 +169,53 @@ The full set of assertions:
 - **`assert_stddev_below`** — experience is consistent enough (low variance)
 - **`assert_no_dominant_strategy`** — no single strategy makes all others irrelevant
 
+## Parameter Sweeps
+
+Instead of running one simulation at a time, sweep a parameter across a range and see how your game's balance changes:
+
+```gdscript
+var result = AutoSimSweepRunner.run(
+    MyAdapter.new(),
+    {"player": AggressiveBot.new()},
+    "enemy_hp",                           # property on your adapter to vary
+    [30, 50, 75, 100, 150, 200, 300]      # values to test
+)
+
+print(result.table())
+```
+
+```
+enemy_hp | Win Rate | Avg Turns | Avg damage_taken
+---------+----------+-----------+-----------------
+30.0     |   100.0% |       5.3 |              7.0
+50.0     |   100.0% |      10.7 |             16.1
+75.0     |   100.0% |      15.7 |             28.8
+100.0    |   100.0% |      20.6 |             36.8
+150.0    |   100.0% |      30.6 |             57.8
+200.0    |    28.0% |      40.5 |             81.8
+300.0    |     0.0% |      40.9 |             85.0
+```
+
+The table answers "what should enemy HP be?" in one call. Every step uses the same seed, so the only variable is the parameter you're sweeping.
+
+Find the exact threshold where balance flips:
+
+```gdscript
+result.find_threshold("player", 0.5)  # → ~175.0 (linearly interpolated)
+```
+
+From the CLI:
+
+```bash
+godot --headless --script addons/godot_autosim/cli/cli.gd -- \
+  --adapter=res://my_adapter.gd \
+  --strategy=res://bot.gd \
+  --sweep=enemy_hp:30,50,75,100,150,200 \
+  --output=sweep_report.json
+```
+
+Each step defaults to 200 iterations — enough precision to see the shape of the curve. Override with `--iterations=500` for finer detail.
+
 ## Async Games
 
 If your game uses `await` in its turn logic (coroutines, signal-driven combat), use the async variants. The adapter interface is identical except `apply_action` becomes `apply_action_async`:

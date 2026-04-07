@@ -1,0 +1,161 @@
+{
+  "meta": {
+    "prd": "docs/prds/parameter-sweep.md",
+    "feature": "Parameter Sweep Runner",
+    "created": "2026-04-06T20:00:00Z",
+    "status": "pending",
+    "platforms": ["godot-4.6"],
+    "base_branch": "main",
+    "feature_branch": "feature/parameter-sweep"
+  },
+  "tasks": [
+    {
+      "id": "T01",
+      "phase": 0,
+      "title": "Write failing tests for AutoSimSweepResult",
+      "type": "test",
+      "agent": "haiku",
+      "status": "pending",
+      "deps": [],
+      "files": {
+        "create": ["tests/test_sweep.gd"],
+        "modify": [],
+        "reference": [
+          "addons/godot_autosim/core/balance_report.gd",
+          "tests/test_assertions_and_report.gd"
+        ]
+      },
+      "spec": "Write GUT tests for AutoSimSweepResult. The class does not exist yet — tests should fail. Test the following:\n\n1. table() returns a formatted string with columns for param value, win rate, and all metric keys found across reports. Test with a manually constructed SweepResult containing 3-4 steps with known data.\n2. find_threshold() returns the interpolated parameter value where win rate crosses a target. Test cases: (a) threshold between two data points (verify linear interpolation math), (b) exact match on a data point, (c) target above all values returns the first param value, (d) target below all values returns the last param value.\n3. get_report() returns the correct BalanceReport for a given param value. Test with exact match and verify it returns null/error for missing values.\n4. param_values() returns Array[float] of all tested values in order.\n5. win_rates() returns Array[float] of win rates in order, matching param_values.\n6. to_dict() returns a Dictionary with keys: param_name, seed_used, iterations_per_step, steps. Each step has value and report (as dict).\n7. to_json() returns valid JSON that parses back to the same structure.\n8. save() writes valid JSON to disk, verify file contents.\n\nUse the pattern from test_assertions_and_report.gd. Create helper methods to build mock SweepResults with known data rather than running actual simulations.\n\nCommit the test file. All tests should fail (class doesn't exist yet).",
+      "completion_marker": "<TASK_COMPLETE:T01>",
+      "blocked_marker": "<TASK_BLOCKED:T01:reason>"
+    },
+    {
+      "id": "M01",
+      "phase": 0,
+      "title": "Implement AutoSimSweepResult",
+      "type": "model",
+      "agent": "sonnet",
+      "status": "pending",
+      "deps": ["T01"],
+      "files": {
+        "create": ["addons/godot_autosim/core/sweep_result.gd"],
+        "modify": [],
+        "reference": [
+          "addons/godot_autosim/core/balance_report.gd",
+          "addons/godot_autosim/core/run_result.gd",
+          "tests/test_sweep.gd"
+        ]
+      },
+      "spec": "Implement AutoSimSweepResult (class_name: AutoSimSweepResult) in addons/godot_autosim/core/sweep_result.gd.\n\nProperties:\n- param_name: String\n- steps: Array[Dictionary] — each entry {value: float, report: AutoSimBalanceReport}\n- seed_used: int\n- iterations_per_step: int\n\nMethods:\n- table(role: String = 'player') -> String: Format a table with columns for param value, win rate, and every unique metric key found across all reports' runs. Use snapped() for clean number formatting. Right-align numbers, left-align headers.\n- find_threshold(role: String, target_win_rate: float) -> float: Walk the steps in order. Find the first pair where win rate crosses the target. Linearly interpolate: threshold = x1 + (target - y1) * (x2 - x1) / (y2 - y1). If target is above all win rates, return the first param value. If below all, return the last.\n- get_report(param_value: float) -> AutoSimBalanceReport: Return the report for the step matching this value, or null if not found. Use is_equal_approx() for float comparison.\n- param_values() -> Array[float]: Return array of all step values in order.\n- win_rates(role: String = 'player') -> Array[float]: Return array of win rates, one per step.\n- to_dict() -> Dictionary: Serialize to {param_name, seed_used, iterations_per_step, steps: [{value, report: report.to_dict()}]}.\n- to_json() -> String: JSON.stringify(to_dict(), '  ')\n- save(path: String) -> Error: Same pattern as BalanceReport.save().\n\nFollow existing code style from balance_report.gd. Use explicit type annotations on all declarations.\n\nRun the test file written in T01. All tests must pass before committing.",
+      "completion_marker": "<TASK_COMPLETE:M01>",
+      "blocked_marker": "<TASK_BLOCKED:M01:reason>"
+    },
+    {
+      "id": "T02",
+      "phase": 1,
+      "title": "Write failing tests for AutoSimSweepRunner",
+      "type": "test",
+      "agent": "haiku",
+      "status": "pending",
+      "deps": [],
+      "files": {
+        "create": [],
+        "modify": ["tests/test_sweep.gd"],
+        "reference": [
+          "addons/godot_autosim/core/sim_runner.gd",
+          "addons/godot_autosim/core/sim_config.gd",
+          "addons/godot_autosim/examples/card_battle/card_battle_adapter.gd"
+        ]
+      },
+      "spec": "Add tests for AutoSimSweepRunner to the existing tests/test_sweep.gd file. The runner class does not exist yet — tests should fail.\n\n1. test_sweep_runs_all_values: Sweep CardBattleAdapter.enemy_hp across [30, 50, 100, 200]. Verify result.steps.size() == 4 and result.param_values() matches input.\n2. test_sweep_uses_same_seed: Run sweep with rng_seed=42. Verify all steps' reports have consistent seeding (same base seed). Run again with seed=42, verify identical results.\n3. test_sweep_sets_property: Sweep enemy_hp across [30, 200]. Verify win rate at 30 is higher than at 200 (weak enemy easier than strong).\n4. test_sweep_default_iterations: Run sweep without specifying iterations. Verify each step has 200 runs (the default).\n5. test_sweep_custom_iterations: Run sweep with iterations=50. Verify each step has 50 runs.\n6. test_sweep_result_integration: Run a full sweep, call table(), verify it returns a non-empty string. Call find_threshold(), verify it returns a float between the min and max param values.\n7. test_sweep_invalid_property: Sweep a property that doesn't exist on the adapter. Verify it handles gracefully (push_warning or similar).\n\nUse CardBattleAdapter and AggressiveBot from the examples. Preload from res://addons/godot_autosim/examples/card_battle/.\n\nCommit the updated test file. New tests should fail (runner class doesn't exist).",
+      "completion_marker": "<TASK_COMPLETE:T02>",
+      "blocked_marker": "<TASK_BLOCKED:T02:reason>"
+    },
+    {
+      "id": "S01",
+      "phase": 1,
+      "title": "Implement AutoSimSweepRunner",
+      "type": "service",
+      "agent": "sonnet",
+      "status": "pending",
+      "deps": ["T02", "M01"],
+      "files": {
+        "create": ["addons/godot_autosim/core/sweep_runner.gd"],
+        "modify": [],
+        "reference": [
+          "addons/godot_autosim/core/sim_runner.gd",
+          "addons/godot_autosim/core/sim_config.gd",
+          "addons/godot_autosim/core/sweep_result.gd",
+          "tests/test_sweep.gd"
+        ]
+      },
+      "spec": "Implement AutoSimSweepRunner (class_name: AutoSimSweepRunner) in addons/godot_autosim/core/sweep_runner.gd.\n\nSingle static method:\n\nstatic func run(\n    adapter: AutoSimGameAdapter,\n    strategies: Dictionary,\n    param_name: String,\n    values: Array,\n    iterations: int = 200,\n    rng_seed: int = -1\n) -> AutoSimSweepResult:\n\nImplementation:\n1. Validate that adapter has the property param_name. If not, push_warning and return an empty result.\n2. Determine base_seed: if rng_seed >= 0 use it, otherwise randi().\n3. For each value in values:\n   a. adapter.set(param_name, value)\n   b. Create AutoSimConfig with adapter, strategies, iterations, base_seed (SAME seed for every step)\n   c. Run AutoSimRunner.run(config)\n   d. Store {value: value, report: report} in steps array\n4. Build and return AutoSimSweepResult with param_name, steps, seed_used=base_seed, iterations_per_step=iterations.\n\nKey design decision: same seed across all steps. This isolates the effect of the parameter change — same random hands, same random enemy patterns, only the swept variable differs.\n\nFollow existing code style from sim_runner.gd. Use explicit type annotations.\n\nRun the test file written in T02. All tests must pass before committing.",
+      "completion_marker": "<TASK_COMPLETE:S01>",
+      "blocked_marker": "<TASK_BLOCKED:S01:reason>"
+    },
+    {
+      "id": "T03",
+      "phase": 2,
+      "title": "Write failing tests for CLI sweep mode",
+      "type": "test",
+      "agent": "haiku",
+      "status": "pending",
+      "deps": [],
+      "files": {
+        "create": [],
+        "modify": ["tests/test_sweep.gd"],
+        "reference": ["addons/godot_autosim/cli/cli.gd"]
+      },
+      "spec": "Add CLI sweep tests to tests/test_sweep.gd. These are not shell-level tests — they test the argument parsing logic. Add a helper that simulates parsing '--sweep=enemy_hp:30,50,100' into {param: 'enemy_hp', values: [30, 50, 100]}.\n\nTests:\n1. test_parse_sweep_arg: Verify '--sweep=enemy_hp:30,50,75,100' parses to param_name='enemy_hp' and values=[30.0, 50.0, 75.0, 100.0].\n2. test_parse_sweep_arg_floats: Verify '--sweep=damage_mult:0.5,1.0,1.5,2.0' parses float values correctly.\n3. test_parse_sweep_arg_single_value: Verify '--sweep=hp:100' parses to a single-element array.\n\nNote: The actual CLI integration test (running godot --headless with --sweep) will be done manually as part of W01 verification, not as a GUT test.\n\nCommit the updated test file.",
+      "completion_marker": "<TASK_COMPLETE:T03>",
+      "blocked_marker": "<TASK_BLOCKED:T03:reason>"
+    },
+    {
+      "id": "W01",
+      "phase": 2,
+      "title": "Add --sweep flag to CLI",
+      "type": "wiring",
+      "agent": "sonnet",
+      "status": "pending",
+      "deps": ["T03", "S01"],
+      "files": {
+        "create": [],
+        "modify": ["addons/godot_autosim/cli/cli.gd"],
+        "reference": [
+          "addons/godot_autosim/core/sweep_runner.gd",
+          "addons/godot_autosim/core/sweep_result.gd"
+        ]
+      },
+      "spec": "Add --sweep flag support to the CLI runner at addons/godot_autosim/cli/cli.gd.\n\nNew flag: --sweep=<param_name>:<val1>,<val2>,...\n\nWhen --sweep is present:\n1. Parse the flag into param_name and Array of float values.\n2. Instead of running AutoSimRunner.run(), call AutoSimSweepRunner.run() with the parsed parameter, values, adapter, strategy, iterations, and seed.\n3. Print result.table() to stdout.\n4. If --output is specified, call result.save(output_path).\n5. Update _print_help() to document the --sweep flag.\n\nWhen --sweep is NOT present, behavior is unchanged (existing single-run mode).\n\nThe --sweep flag replaces --iterations default: if not specified, use 200 (sweep default). User can still override with --iterations=500.\n\nRun the test file written in T03. All parse tests must pass. Also manually verify:\n- godot --headless --script cli.gd -- --adapter=res://addons/godot_autosim/examples/card_battle/card_battle_adapter.gd --strategy=res://addons/godot_autosim/examples/card_battle/aggressive_bot.gd --sweep=enemy_hp:30,50,100,200\n- Verify table prints correctly and --output writes valid JSON.\n\nCommit changes to cli.gd.",
+      "completion_marker": "<TASK_COMPLETE:W01>",
+      "blocked_marker": "<TASK_BLOCKED:W01:reason>"
+    },
+    {
+      "id": "D01",
+      "phase": 3,
+      "title": "Update README with sweep documentation",
+      "type": "docs",
+      "agent": "haiku",
+      "status": "pending",
+      "deps": ["W01"],
+      "files": {
+        "create": [],
+        "modify": [
+          "README.md",
+          "addons/godot_autosim/README.md",
+          "CHANGELOG.md"
+        ],
+        "reference": ["docs/prds/parameter-sweep.md"]
+      },
+      "spec": "Update README.md with a new 'Parameter Sweeps' section after 'Balance Tests in CI'. Show:\n1. The code API with a real example using CardBattleAdapter.enemy_hp\n2. Example table() output\n3. find_threshold() usage\n4. CLI --sweep usage\n\nKeep the narrative style established in the README rewrite — explain what it does and why, not just method signatures.\n\nUpdate the CLI section in Quick Start to mention --sweep.\n\nAdd v0.3.0 entry to CHANGELOG.md with the sweep feature.\n\nCopy updated README to addons/godot_autosim/README.md.\n\nDo NOT update plugin.cfg version yet — that happens at release time.",
+      "completion_marker": "<TASK_COMPLETE:D01>",
+      "blocked_marker": "<TASK_BLOCKED:D01:reason>"
+    }
+  ],
+  "phases": {
+    "0": "Data Model (SweepResult)",
+    "1": "Core Implementation (SweepRunner)",
+    "2": "CLI Integration",
+    "3": "Documentation"
+  }
+}
