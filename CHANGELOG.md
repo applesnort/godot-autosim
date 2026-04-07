@@ -4,6 +4,14 @@ All notable changes to godot-autosim will be documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - Unreleased
+
+### Added
+- Parameter sweep runner (`AutoSimSweepRunner`) — vary a single adapter property across a range of values, get a comparison table and threshold finding
+- `AutoSimSweepResult` with `table()`, `find_threshold()`, `get_report()`, JSON export
+- CLI `--sweep` flag for running sweeps from the command line
+- 23 new sweep tests (62 total)
+
 ## [0.2.0] - 2026-04-06
 
 ### Added
